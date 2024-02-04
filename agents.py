@@ -1,14 +1,16 @@
 from textwrap import dedent
 from crewai import Agent
-from tools.browser_tools import BrowserTools
-from tools.search_tools import SearchTools 
+from tools.BrowserTools import BrowserTools
+from tools.SearchTools import SearchTools 
 from langchain.agents import load_tools 
 
 from langchain.llms import Ollama 
+from langchain_community.chat_models import ChatOpenAI
 
 class MarketingAnalysisAgents:
     def __init__(self):
-        self.llm = Ollama(model="openhermes")
+        # self.llm = Ollama(model="openhermes")
+        self.llm = ChatOpenAI(model='gpt-3.5-turbo-0613') # Loading GPT-3.5
     
     def product_competitor_agent(self):
         return Agent(
@@ -60,6 +62,10 @@ class MarketingAnalysisAgents:
                 Your expertise lies in turning marketing strategies
                 into engaging stories and visual content that capture
                 attention and inspire action."""),
+            backstory=dedent("""\
+                You are the creative content creator at
+                a leading digital marketing agency, known for crafting 
+                bespoke strategies that drive success."""),
             tools=[
                 BrowserTools.scrape_and_summarize_website,
                 SearchTools.search_internet, 

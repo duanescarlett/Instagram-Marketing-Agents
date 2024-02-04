@@ -1,49 +1,48 @@
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 from langchain.chains import create_extraction_chain
+from langchain.tools import tool
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 class BrowserTools:
     
-    def scrape_and_summarize_website(self):
-        data = ""
+    @tool("Scrape website content async")
+    def scrape_and_summarize_website(url):
+        """Useful to scrape and summerize website content"""
+        try:
+            # Set up Selenium
+            chrome_options = Options()
+            chrome_options.add_argument('--headless')  # Run in headless mode (no GUI)
+            chrome_options.add_argument('--no-sandbox')
+            chrome_options.add_argument('--disable-dev-shm-usage')
+            # driver = webdriver.Chrome(options=chrome_options)
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+            print(url)
+            driver.get(url)
 
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            # Wait for the page to load (you may need to adjust the wait time)
+            driver.implicitly_wait(5)
 
-            page = await browser.new_page()
-            await page.goto(site)
+            # Get the page source after it has loaded
+            page_source = driver.page_source
 
-            page_source = await page.content()
-            soup = BeautifulSoup(page_source, "html.parser")
+            # Use BeautifulSoup to parse the HTML
+            soup = BeautifulSoup(page_source, 'html.parser')
 
-            for script in soup(["script", "style"]):
-                scrikpt.extract()
+            # Extract text content
+            text_content = soup.get_text()
 
-            # get text
-            text = soup.get_text()
-            # break into lines and remove leading and trailing space on each
-            lines = (line.strip() for line in text.splitlines())
-            # break multi-headlines into a line each
+            # Format the text (remove leading/trailing spaces, break into lines, etc.)
+            lines = (line.strip() for line in text_content.splitlines())
             chunks = (phrase.strip() for line in lines for phrase in line.split(" "))
-            # drop blank lines
-            data = '\n'.join(chunk for chunk in chunks if chunk)
+            formatted_content = '\n'.join(chunk for chunk in chunks if chunk)
 
-            await browser.close()
-        
-        return data
+            # Return only the first 5k characters
+            return formatted_content[:5000]
 
-    @tool("Scrape website content")
-    def scrape_website(website):
-        """Useful to scrape a website content"""
-        url = f"https://chrome.browserless.io/content?token={config('BROWSERLESS_API_KEY')}"
-        payload = json.dumps({"url": website})
-        headers = {
-        'cache-control': 'no-cache',
-        'content-type': 'application/json'
-        }
-        response = requests.request("POST", url, headers=headers, data=payload)
-        elements = partition_html(text=response.text)
-        content = "\n\n".join([str(el) for el in elements])
-
-        # Return only the first 5k characters
-        return content[:5000]
+        finally:
+            # Close the Selenium WebDriver
+            driver.quit()

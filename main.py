@@ -22,9 +22,9 @@ creative_agent = agents.creative_content_creator_agent()
 
 # Create Tasks
 website_analysis = tasks.product_analysis(product_competitor_agent, product_website, product_details)
-market_analysis = tasks.product_competitor_analysis(product_competitor_agent, product_website, product_details)
+market_analysis = tasks.competitor_analysis(product_competitor_agent, product_website, product_details)
 campaign_development = tasks.campaign_development(strategy_planner_agent, product_website, product_details)
-write_copy = task.instagram_ad_copy(creative_agent)
+write_copy = tasks.instagram_ad_copy(creative_agent)
 
 # Create Crew responsible for copy
 copy_crew = Crew(
@@ -50,7 +50,7 @@ chief_creative_director = agents.chief_creative_director_agent()
 
 # Create Tasks for Image
 take_photo = tasks.take_photograph_task(senior_photographer, ad_copy, product_website, product_details)
-approve_photo = tasks.review_photo()
+approve_photo = tasks.review_photo(senior_photographer, product_website, product_details)
 
 image_crew = Crew(
     agents = [
@@ -74,5 +74,22 @@ print("Your post copy:")
 print(ad_copy)
 print("\n\nYour midjourney description:")
 print(image)
+
+def write_to_file(filename, content):
+    try:
+        with open(filename, 'a', encoding='utf-8') as file:
+            file.write(content)
+        print(f"Content successfully written to {filename}")
+    except FileNotFoundError:
+        print(f"Error: File '{filename}' not found.")
+    except PermissionError:
+        print(f"Error: Permission denied. Unable to write to '{filename}'.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+write_to_file('ad_copy.txt', image)
+
+write_to_file('photo.txt', ad_copy)
+
 
 
